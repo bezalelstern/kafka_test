@@ -1,6 +1,8 @@
 import json
 from kafka import KafkaConsumer, KafkaProducer
 
+from service import chek_explosive, chek_hostage
+
 consumer = KafkaConsumer(
     'stream',
     group_id='email_group',
@@ -8,41 +10,6 @@ consumer = KafkaConsumer(
     value_deserializer=lambda m: json.loads(m.decode('utf-8'))
 )
 
-def chek_explosive(email):
-    sentences = email["sentences"]
-    index = -1
-    flag = False
-    sherch_word = "explos"
-    for sentence in sentences:
-        if sherch_word in sentence.lower():
-            index = sentences.index(sentence)
-            flag =  True
-            break
-    if flag:
-        sentence = sentences[index]
-        sentences.pop(index)
-        sentences.insert(0, sentence)
-        print("explosiv")
-    return flag, sentences
-
-
-def chek_hostage(email):
-    sentences = email["sentences"]
-    index = -1
-    flag = False
-    sherch_word = "hostage"
-    for sentence in sentences:
-        if sherch_word in sentence.lower():
-            index = sentences.index(sentence)
-            flag =  True
-            break
-    if flag:
-        sentence = sentences[index]
-        sentences.pop(index)
-        sentences.insert(0, sentence)
-        print("hostage")
-
-    return flag, sentences
 
 
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
