@@ -1,5 +1,9 @@
 import json
+from imaplib import Flags
+
 from kafka import KafkaConsumer, KafkaProducer
+
+from app.app import index
 
 consumer = KafkaConsumer(
     'stream',
@@ -10,36 +14,55 @@ consumer = KafkaConsumer(
 
 def chek_explosive(email):
     sentences = email["sentences"]
-    if "explos" in sentences:
-        return True
+    index = -1
+    flag = False
+    sherch_word = "explos"
+    for sentence in sentences:
+        if sherch_word in sentence.lower():
+            index = sentences.index(sentence)
+            flag =  True
+            break
+    if flag:
+        sentence = sentences[index]
+        sentences.pop(index)
+        sentences.insert(0, sentence)
+
+    return flag, sentences
+
 
 def chek_hostage(email):
     sentences = email["sentences"]
-    if "hostage" in sentences:
-        print("subolo")
-        return True
+    index = -1
+    flag = False
+    sherch_word = "hotage"
+    for sentence in sentences:
+        if sherch_word in sentence.lower():
+            index = sentences.index(sentence)
+            flag =  True
+            break
+    if flag:
+        sentence = sentences[index]
+        sentences.pop(index)
+        sentences.insert(0, sentence)
+
+    return flag, sentences
 
 
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 
-all_messages = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                               value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-hostage_messages = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                                    value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-explosive_messages = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                                               value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-
-
 for message in consumer:
     email = message.value
-    print(email)
     producer.send(topic="all_emails", value=email)
-    # if chek_explosive(email):
-    #     producer.send(topic="explosive_emails", value=email)
-    # if chek_hostage(email):
-    producer.send(topic='hostages_emails', value=email)
+
+    explosive, email["sentences"] = chek_explosive(email)
+    hostages, email["sentences"] = chek_explosive(email)
+
+    if explosive:
+         producer.send(topic="explosive_emails", value=email)
+    if hostages:
+        producer.send(topic='hostages_emails', value=email)
 
 
 

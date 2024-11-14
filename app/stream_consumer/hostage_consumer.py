@@ -11,4 +11,5 @@ consumer = KafkaConsumer(
 
 for msg in consumer:
     email = msg.value
-    print(email)
+    print(email['sentens'])
+
