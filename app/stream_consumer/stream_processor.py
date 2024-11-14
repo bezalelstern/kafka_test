@@ -1,5 +1,4 @@
 import json
-
 from kafka import KafkaConsumer, KafkaProducer
 
 consumer = KafkaConsumer(
@@ -17,8 +16,12 @@ def chek_explosive(email):
 def chek_hostage(email):
     sentences = email["sentences"]
     if "hostage" in sentences:
+        print("subolo")
         return True
 
+
+producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 
 all_messages = KafkaProducer(bootstrap_servers=['localhost:9092'],
@@ -31,11 +34,12 @@ explosive_messages = KafkaProducer(bootstrap_servers=['localhost:9092'],
 
 for message in consumer:
     email = message.value
-    all_messages.send(topic="all_emails", value=email)
-    if chek_explosive(email):
-        explosive_messages.send(topic="explosive_emails", value=email)
-    if chek_hostage(email):
-        hostage_messages.send(topic='hostages_emails', value=email)
+    print(email)
+    producer.send(topic="all_emails", value=email)
+    # if chek_explosive(email):
+    #     producer.send(topic="explosive_emails", value=email)
+    # if chek_hostage(email):
+    producer.send(topic='hostages_emails', value=email)
 
 
 
