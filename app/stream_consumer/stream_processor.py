@@ -1,9 +1,5 @@
 import json
-from imaplib import Flags
-
 from kafka import KafkaConsumer, KafkaProducer
-
-from app.app import index
 
 consumer = KafkaConsumer(
     'stream',
@@ -26,7 +22,7 @@ def chek_explosive(email):
         sentence = sentences[index]
         sentences.pop(index)
         sentences.insert(0, sentence)
-
+        print("explosiv")
     return flag, sentences
 
 
@@ -34,7 +30,7 @@ def chek_hostage(email):
     sentences = email["sentences"]
     index = -1
     flag = False
-    sherch_word = "hotage"
+    sherch_word = "hostage"
     for sentence in sentences:
         if sherch_word in sentence.lower():
             index = sentences.index(sentence)
@@ -44,6 +40,7 @@ def chek_hostage(email):
         sentence = sentences[index]
         sentences.pop(index)
         sentences.insert(0, sentence)
+        print("hostage")
 
     return flag, sentences
 
@@ -57,7 +54,7 @@ for message in consumer:
     producer.send(topic="all_emails", value=email)
 
     explosive, email["sentences"] = chek_explosive(email)
-    hostages, email["sentences"] = chek_explosive(email)
+    hostages, email["sentences"] = chek_hostage(email)
 
     if explosive:
          producer.send(topic="explosive_emails", value=email)
